@@ -1,0 +1,82 @@
+# Data Analysis on Weather Data
+
+
+## Synopisis
+
+This Analysis answers two main questions by using National Oceanic and Atmospheric Administration's (NOAA) storm database. First it analysis the data and explore the events
+which were more harmful to human health. There factors include injuries and fatalities caused by various events. This Analysis will presentcombined plot of casualities and injuries caused by various events.
+
+In next part, this will present you various plot of events which had greatest economic consequences, in other words evemts which costs maximum financially. This Analysis will presentcombined plot of total damage (crop damage and property damage) caused by various events.
+
+## Data Analysis
+
+
+```r
+library("sqldf")
+```
+
+```
+## Loading required package: gsubfn
+## Loading required package: proto
+## Loading required package: RSQLite
+## Loading required package: DBI
+## Loading required package: RSQLite.extfuns
+```
+
+```r
+library("ggplot2")
+```
+
+
+## Analysis Part: 1
+
+
+```r
+weatherData <- read.csv("repdata-data-StormData.csv")
+
+casualityData <- sqldf("Select EVTYPE, sum(FATALITIES) as FAT,sum(injuries) as INJ from weatherData group by EVTYPE order by sum(FATALITIES+injuries) desc")
+```
+
+```
+## Loading required package: tcltk
+```
+
+```r
+
+
+
+plot1 <- qplot(EVTYPE, FAT + INJ, data = casualityData[1:15, ], geom = "histogram", 
+    stat = "identity")
+plot1 <- plot1 + theme(title = element_text(face = "bold"), axis.text.x = element_text(angle = 90, 
+    hjust = 1))
+plot1 <- plot1 + xlab("Event Type") + ylab("Total Incidents") + ggtitle("Combined plot of fatalities and Injuries as per event")
+
+print(plot1)
+```
+
+![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2.png) 
+
+## Analysis Part: 2
+
+```r
+damageData <- sqldf("Select EVTYPE, sum(case PROPDMGEXP WHEN 'K' THEN PROPDMG/1000 WHEN 'M' THEN PROPDMG WHEN 'B' THEN PROPDMG*1000 WHEN 'H' THEN PROPDMG/10000 ELSE 0 END) as propDamage, sum(case CROPDMGEXP WHEN 'K' THEN CROPDMG/1000 WHEN 'M' THEN CROPDMG WHEN 'B' THEN CROPDMG*1000 WHEN 'H' THEN CROPDMG/10000 ELSE 0 END) as cropDamage FROM weatherData group by EVTYPE order by sum((case PROPDMGEXP WHEN 'K' THEN PROPDMG/1000 WHEN 'M' THEN PROPDMG WHEN 'B' THEN PROPDMG*1000 WHEN 'H' THEN PROPDMG/10000 ELSE 0 END)  + (case CROPDMGEXP WHEN 'K' THEN CROPDMG/1000 WHEN 'M' THEN CROPDMG WHEN 'B' THEN CROPDMG*1000 WHEN 'H' THEN CROPDMG/10000 ELSE 0 END)) desc\n  ")
+
+plot2 <- qplot(EVTYPE, cropDamage + propDamage, data = damageData[1:25, ], geom = "histogram", 
+    stat = "identity")
+plot2 <- plot2 + theme(title = element_text(face = "bold"), axis.text.x = element_text(angle = 90, 
+    hjust = 1))
+plot2 <- plot2 + xlab("Event Type") + ylab("Total Damage in Millions") + ggtitle("Combined plot of Crop Damage and Property Damage as per event")
+
+print(plot2)
+```
+
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3.png) 
+
+## Results
+
+### As per the results in histogram, we can conclude following:
+
+* Tornados are responsible to cause most harm to population's health as compared to any other event.
+* Floods are reponsible to cause most financial loss as compared to any other event.
+
+
